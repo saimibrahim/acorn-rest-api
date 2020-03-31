@@ -5,7 +5,10 @@ import auth.Acorn
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import org.springframework.http.HttpHeaders
 import java.lang.RuntimeException
+
 
 
 @RestController
@@ -13,8 +16,17 @@ import java.lang.RuntimeException
 class GradesController {
 
     @PostMapping("/transcript")
-    fun transcript(account: Account): String? {
-        val acorn = Acorn(account.utorid, account.password)
+    fun transcript(@RequestHeader headers: HttpHeaders): String? {
+        val encodedCredentials = headers.getFirst(HttpHeaders.AUTHORIZATION)?.substring(6)
+        if (encodedCredentials == null) {
+            throw AuthException("Authentication Error")
+        }
+
+        val credentials = getCredentials(encodedCredentials)
+        val utorid = credentials[0]
+        val pass = credentials[1]
+
+        val acorn = Acorn(utorid, pass)
 
         try {
             acorn.doLogin()
